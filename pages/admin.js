@@ -25,7 +25,7 @@ export default function Admin() {
 
   // ★ 銘柄一覧
   const loadStocks = async () => {
-    const r = await axios.get("http://localhost:3001/stocks");
+    const r = await axios.get("https://myportfolio-backend-k0tc.onrender.com/stocks");
     setStocks(r.data);
   };
 
@@ -35,7 +35,7 @@ export default function Admin() {
 
   // ★ 銘柄登録
   const save = async () => {
-    await axios.post("http://localhost:3001/stocks", d, {
+    await axios.post("https://myportfolio-backend-k0tc.onrender.com/stocks", d, {
       headers: { Authorization: "Bearer " + token },
     });
     alert("登録完了");

@@ -17,7 +17,7 @@ export default function Home() {
   const [stocks, setStocks] = useState([]);
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:3001/stocks").then((r) => {
+    axios.get("https://myportfolio-backend-k0tc.onrender.com/stocks").then((r) => {
       setStocks(r.data);
     });
   }, []);

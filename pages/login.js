@@ -5,12 +5,16 @@ export default function Login(){
  const [u,setU]=useState('')
  const [p,setP]=useState('')
 
- const login=async()=>{
-  try{
-    const r=await axios.post('http://localhost:3001/login',{username:u,password:p})
-    localStorage.setItem('token',r.data.token)
-    location.href='/admin'
-  }catch(e){
+ const login = async () => {
+  try {
+    const r = await axios.post(
+      'https://myportfolio-backend-k0tc.onrender.com/login',  // ← 修正ポイント
+      { username: u, password: p }
+    )
+
+    localStorage.setItem('token', r.data.token)
+    location.href = '/admin'
+  } catch (e) {
     alert('ログイン失敗：IDまたはパスワードが間違っています')
   }
  }
