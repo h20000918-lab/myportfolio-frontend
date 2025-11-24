@@ -12,7 +12,7 @@ export default function Admin() {
     buy_amount: "",
   });
 
-  // ★ ページ読み込み時にログイン確認
+  // ログイン確認
   useEffect(() => {
     const t = localStorage.getItem("token");
     if (!t) {
@@ -23,9 +23,9 @@ export default function Admin() {
     setToken(t);
   }, []);
 
-  // ★ 銘柄一覧
+  // 銘柄一覧取得
   const loadStocks = async () => {
-    const r = await axios.get("https://myportfolio-backend-k0tc.onrender.com/stocks");
+    const r = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/stocks`);
     setStocks(r.data);
   };
 
@@ -33,20 +33,20 @@ export default function Admin() {
     loadStocks();
   }, []);
 
-  // ★ 銘柄登録
+  // 銘柄登録
   const save = async () => {
-    await axios.post("https://myportfolio-backend-k0tc.onrender.com/stocks", d, {
+    await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/stocks`, d, {
       headers: { Authorization: "Bearer " + token },
     });
     alert("登録完了");
     loadStocks();
   };
 
-  // ★ 銘柄削除
+  // 銘柄削除
   const del = async (id) => {
     if (!window.confirm("本当に削除しますか？")) return;
 
-    await axios.delete(`http://localhost:3001/stocks/${id}`, {
+    await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/stocks/${id}`, {
       headers: { Authorization: "Bearer " + token },
     });
 
@@ -54,9 +54,35 @@ export default function Admin() {
     loadStocks();
   };
 
+  // 入力欄共通スタイル
+  const inputStyle = {
+    width: "100%",
+    padding: "12px",
+    marginTop: "10px",
+    fontSize: "16px",
+    borderRadius: "10px",
+    border: "1px solid #ccc",
+  };
+
+  const cardStyle = {
+    background: "white",
+    borderRadius: "16px",
+    padding: "16px",
+    marginBottom: "16px",
+    boxShadow: "0px 4px 10px rgba(0,0,0,0.1)",
+  };
+
   return (
-    <div style={{ padding: 20 }}>
-      <h1>銘柄登録（管理者専用）</h1>
+    <div
+      style={{
+        padding: "20px",
+        background: "linear-gradient(#EAF6FF, #CDE8FF)",
+        minHeight: "100vh",
+      }}
+    >
+      <h1 style={{ fontSize: "22px", marginBottom: "20px" }}>
+        銘柄登録（管理者専用）
+      </h1>
 
       {/* ログアウト */}
       <button
@@ -67,11 +93,13 @@ export default function Admin() {
         style={{
           background: "#FF6262",
           color: "#fff",
-          padding: "8px 16px",
-          borderRadius: 10,
+          padding: "10px 16px",
+          borderRadius: "12px",
           border: "none",
-          marginBottom: 20,
+          marginBottom: "20px",
           fontWeight: "bold",
+          width: "100%",
+          fontSize: "16px",
         }}
       >
         ログアウト
@@ -80,60 +108,80 @@ export default function Admin() {
       {/* 入力フォーム */}
       <input
         placeholder="銘柄コード"
+        style={inputStyle}
         onChange={(e) => setD({ ...d, code: e.target.value })}
       />
-      <br />
+
       <input
         placeholder="銘柄名"
+        style={inputStyle}
         onChange={(e) => setD({ ...d, name: e.target.value })}
       />
-      <br />
+
       <input
         placeholder="買付単価"
+        style={inputStyle}
         onChange={(e) => setD({ ...d, buy_price: e.target.value })}
       />
-      <br />
+
       <input
         placeholder="株数"
+        style={inputStyle}
         onChange={(e) => setD({ ...d, shares: e.target.value })}
       />
-      <br />
+
       <input
         placeholder="買付総額"
+        style={inputStyle}
         onChange={(e) => setD({ ...d, buy_amount: e.target.value })}
       />
-      <br />
 
-      <button onClick={save} style={{ marginTop: 10 }}>
+      <button
+        onClick={save}
+        style={{
+          marginTop: "16px",
+          width: "100%",
+          padding: "12px",
+          borderRadius: "10px",
+          background: "#4A90E2",
+          color: "white",
+          border: "none",
+          fontSize: "18px",
+          fontWeight: "bold",
+        }}
+      >
         登録
       </button>
 
       {/* 銘柄一覧 */}
-      <h2 style={{ marginTop: 40 }}>登録済み銘柄</h2>
+      <h2 style={{ marginTop: "40px", fontSize: "20px" }}>登録済み銘柄</h2>
 
       {stocks.map((s) => (
-        <div
-          key={s.id}
-          style={{
-            border: "1px solid #aaa",
-            padding: 10,
-            marginBottom: 10,
-          }}
-        >
-          <b>{s.name}</b>（{s.code}）
-          <br />
-          買付額: {s.buy_amount}
-          <br />
-          株数: {s.shares}
-          <br />
+        <div key={s.id} style={cardStyle}>
+          <div
+            style={{
+              fontSize: "18px",
+              fontWeight: "bold",
+              marginBottom: "6px",
+            }}
+          >
+            {s.name}（{s.code}）
+          </div>
+
+          <div style={{ marginBottom: "4px" }}>買付額: {s.buy_amount}</div>
+          <div style={{ marginBottom: "8px" }}>株数: {s.shares}</div>
 
           <button
             onClick={() => del(s.id)}
             style={{
               background: "red",
               color: "white",
-              padding: "5px 10px",
-              marginTop: 5,
+              padding: "8px 12px",
+              marginTop: "5px",
+              border: "none",
+              borderRadius: "8px",
+              fontWeight: "bold",
+              width: "100%",
             }}
           >
             削除

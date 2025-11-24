@@ -8,7 +8,7 @@ export default function Portfolio(){
   const [stocks,setStocks]=useState([]);
 
   useEffect(()=>{
-    axios.get('https://myportfolio-backend-k0tc.onrender.com/stocks').then(r=>{
+    axios.get(`${process.env.NEXT_PUBLIC_API_URL}/stocks`).then(r=>{
       const sorted=r.data.sort((a,b)=>a.code.localeCompare(b.code));
       setStocks(sorted);
     });

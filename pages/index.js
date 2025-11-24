@@ -5,59 +5,61 @@ import {
   Pie,
   Cell,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
 } from "recharts";
 
 export default function Home() {
   const [stocks, setStocks] = useState([]);
 
+  // ---- API ----
   useEffect(() => {
-    axios.get("https://myportfolio-backend-k0tc.onrender.com/stocks").then((r) => {
-      setStocks(r.data);
-    });
+    axios
+      .get(`${process.env.NEXT_PUBLIC_API_URL}/stocks`)
+      .then((r) => setStocks(r.data))
+      .catch((e) => console.error(e));
   }, []);
 
-  if (!stocks.length) return <div>読込中...</div>;
+  if (!stocks.length)
+    return (
+      <div
+        style={{
+          minHeight: "100dvh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "clamp(20px, 6vw, 28px)",
+        }}
+      >
+        読込中...
+      </div>
+    );
 
-  // ============
-  // ① 総合損益
-  // ============
+  // ---- 計算 ----
+  const totalAssets = stocks.reduce(
+    (sum, s) => sum + s.current_price * s.shares,
+    0
+  );
+
   const totalProfit = stocks.reduce(
     (sum, s) => sum + (s.current_price - s.buy_price) * s.shares,
     0
   );
+
   const totalBuyAmount = stocks.reduce((sum, s) => sum + s.buy_amount, 0);
   const totalProfitRate = ((totalProfit / totalBuyAmount) * 100).toFixed(2);
-
   const profitColor = totalProfit >= 0 ? "#2ecc71" : "#e74c3c";
 
-  // ============
-  // ② 年間配当
-  // ============
   const allDividend = stocks.reduce(
     (sum, s) =>
       sum + s.current_price * (s.dividend_yield / 100) * s.shares,
     0
   );
 
-  const totalValuation = stocks.reduce(
-    (sum, s) => sum + s.current_price * s.shares,
-    0
-  );
-
   const weightedDividendYield = (
-    (allDividend / totalValuation) *
-    100
+    (allDividend / totalAssets) * 100
   ).toFixed(2);
 
-  // ============
-  // 円グラフデータ
-  // ============
+  // ---- 円グラフ ----
   const pieData = stocks.map((s) => ({
     name: s.name,
     value: s.current_price * s.shares,
@@ -74,67 +76,64 @@ export default function Home() {
     "#A3E4D7",
   ];
 
-  // ============
-  // iGrow カード
-  // ============
   const cardStyle = {
-    background: "linear-gradient(135deg, #ffffff, #e8f4ff)",
-    padding: "18px",
+    background: "white",
+    padding: "clamp(14px, 4vw, 24px)",
     borderRadius: "20px",
-    marginBottom: "18px",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+    marginBottom: "clamp(14px, 4vw, 24px)",
+    boxShadow: "0 4px 14px rgba(0,0,0,0.1)",
   };
 
   const lineStyle = {
     marginTop: "4px",
-    fontSize: "16px",
+    fontSize: "clamp(14px, 3.6vw, 18px)",
   };
 
-  // ============
-  // 損益ランキング（万円変換）
-  // ============
-  const barData = stocks
-    .map((s) => ({
-      name: s.name,
-      profit_man: ((s.current_price - s.buy_price) * s.shares) / 10000, // ← 万円
-    }))
-    .sort((a, b) => b.profit_man - a.profit_man);
-
-  // ============
-  // レンダリング
-  // ============
   return (
     <div
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         background: "linear-gradient(#EAF6FF, #CDE8FF)",
-        padding: "16px",
-        position: "relative",
+        padding: "clamp(12px, 4vw, 24px)",
       }}
     >
-      {/* ★ 右上に管理者ページボタン */}
+      {/* ---- 管理者リンク ---- */}
       <a
         href="/admin"
         style={{
           position: "fixed",
-          top: 15,
-          right: 15,
-          background: "rgba(255,255,255,0.8)",
-          padding: "10px 16px",
-          borderRadius: "18px",
+          top: 12,
+          right: 12,
+          background: "rgba(255,255,255,0.75)",
+          padding: "6px 12px",
+          borderRadius: "14px",
+          fontSize: "clamp(12px, 3.2vw, 16px)",
           fontWeight: "bold",
           color: "#333",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+          zIndex: 10,
         }}
       >
         管理者
       </a>
 
-      {/* 1: 総合損益 */}
-      <div style={{ marginBottom: "20px", textAlign: "center" }}>
+      {/* ---- 総資産 ---- */}
+      <div
+        style={{
+          textAlign: "center",
+          fontSize: "clamp(24px, 6vw, 36px)",
+          fontWeight: "bold",
+          marginBottom: "clamp(16px, 5vw, 24px)",
+        }}
+      >
+        💰 総資産：{totalAssets.toLocaleString()} 円
+      </div>
+
+      {/* ---- 損益 ---- */}
+      <div style={{ textAlign: "center", marginBottom: "24px" }}>
         <div
           style={{
-            fontSize: "40px",
+            fontSize: "clamp(32px, 8vw, 46px)",
             fontWeight: "bold",
             color: profitColor,
             animation: "fadeblink 2s infinite",
@@ -144,41 +143,105 @@ export default function Home() {
             ? `+${totalProfit.toLocaleString()}円`
             : `${totalProfit.toLocaleString()}円`}
         </div>
-        <div style={{ fontSize: "24px", color: profitColor }}>
+        <div
+          style={{
+            fontSize: "clamp(18px, 4.5vw, 26px)",
+            color: profitColor,
+          }}
+        >
           ({totalProfitRate}%)
         </div>
       </div>
 
-      {/* 2: 配当まとめ */}
+      {/* ---- 配当 ---- */}
       <div style={{ ...cardStyle, textAlign: "center" }}>
-        <div style={{ fontSize: "20px", fontWeight: "bold" }}>📈 配当情報</div>
-        <div style={{ fontSize: "22px", marginTop: 6 }}>
+        <div style={{ fontSize: "clamp(18px, 5vw, 24px)", fontWeight: "bold" }}>
+          📈 配当情報
+        </div>
+        <div style={{ fontSize: "clamp(18px, 5vw, 22px)", marginTop: 6 }}>
           総合配当利回り：<b>{weightedDividendYield}%</b>
         </div>
-        <div style={{ fontSize: "22px" }}>
+        <div style={{ fontSize: "clamp(18px, 5vw, 22px)" }}>
           年間配当金：<b>{allDividend.toLocaleString()}円</b>
         </div>
       </div>
 
-      {/* 3: 円グラフ + 凡例 */}
-      <div style={{ ...cardStyle, height: 330 }}>
-        <div style={{ textAlign: "center", fontWeight: "bold" }}>🥧 資産構成比</div>
+      {/* ---- 円グラフ ---- */}
+      <div style={{ ...cardStyle }}>
+        <div
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "clamp(16px, 4vw, 22px)",
+          }}
+        >
+          🥧 資産構成比
+        </div>
 
-        <ResponsiveContainer width="100%" height="80%">
+        <ResponsiveContainer width="100%" height={260}>
           <PieChart>
-            <Pie data={pieData} dataKey="value" cx="50%" cy="50%" outerRadius={90}>
+            <Pie
+              data={pieData}
+              dataKey="value"
+              cx="50%"
+              cy="50%"
+              outerRadius={110}
+            >
               {pieData.map((entry, index) => (
-                <Cell key={index} fill={pieColors[index % pieColors.length]} />
+                <Cell
+                  key={index}
+                  fill={pieColors[index % pieColors.length]}
+                />
               ))}
             </Pie>
-            <Tooltip />
-            <Legend verticalAlign="bottom" height={36} />
+            <Tooltip
+              formatter={(v) => `${((v / totalAssets) * 100).toFixed(1)}%`}
+            />
           </PieChart>
         </ResponsiveContainer>
+
+        {/* ---- 凡例 ---- */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "10px 14px",
+            marginTop: 10,
+            padding: "0 6px",
+          }}
+        >
+          {pieData.map((s, i) => {
+            const percent = ((s.value / totalAssets) * 100).toFixed(1);
+            return (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  fontSize: "clamp(12px, 3.5vw, 15px)",
+                  wordBreak: "break-word",
+                }}
+              >
+                <div
+                  style={{
+                    width: 12,
+                    height: 12,
+                    background: pieColors[i % pieColors.length],
+                    borderRadius: 4,
+                    marginRight: 6,
+                  }}
+                />
+                {s.name}（{percent}%）
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* 4: カード一覧 */}
-      <h2 style={{ fontSize: 22, marginTop: 20 }}>📘 保有銘柄</h2>
+      {/* ---- 保有銘柄 ---- */}
+      <h2 style={{ fontSize: "clamp(20px, 5vw, 26px)", marginTop: 20 }}>
+        📘 保有銘柄
+      </h2>
 
       {stocks.map((s) => {
         const profit = (s.current_price - s.buy_price) * s.shares;
@@ -191,7 +254,12 @@ export default function Home() {
 
         return (
           <div key={s.id} style={cardStyle}>
-            <div style={{ fontSize: "22px", fontWeight: "bold" }}>
+            <div
+              style={{
+                fontSize: "clamp(18px, 5vw, 24px)",
+                fontWeight: "bold",
+              }}
+            >
               {s.name}（{s.code}）
             </div>
 
@@ -221,32 +289,7 @@ export default function Home() {
         );
       })}
 
-      {/* 5: 損益ランキング */}
-      <div style={{ ...cardStyle, marginTop: 20 }}>
-        <div style={{ textAlign: "center", fontWeight: "bold", marginBottom: 10 }}>
-          📊 損益ランキング（万円）
-        </div>
-
-        <div style={{ width: "100%", height: 300 }}>
-          <ResponsiveContainer>
-            <BarChart data={barData} layout="vertical">
-              <XAxis
-                type="number"
-                tickFormatter={(v) => `${v} 万`}
-              />
-              <YAxis type="category" dataKey="name" width={80} />
-              <Tooltip formatter={(v) => `${v.toFixed(1)} 万円`} />
-              <Bar
-                dataKey="profit_man"
-                radius={[10, 10, 10, 10]}
-                fill="#7EC1FF"
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* フェード */}
+      {/* ---- 点滅アニメ ---- */}
       <style>
         {`
         @keyframes fadeblink {
